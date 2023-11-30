@@ -81,13 +81,42 @@ describe.only('Invalid user registration', () => {
     expect(body.validationErrors).not.toBeUndefined();
   });
 
-  test('returns Username cannot be null when user is null', async () => {
+  // Dynamic test
+  test.each`
+    field         | value               | expectedMsg
+    ${'username'} | ${null}             | ${'Username cannot be null'}
+    ${'username'} | ${'usr'}            | ${'Must have min 4 and max 32 characters'}
+    ${'username'} | ${'a'.repeat(33)}   | ${'Must have min 4 and max 32 characters'}
+    ${'email'}    | ${null}             | ${'E-mail cannot be null'}
+    ${'email'}    | ${'mail.com'}       | ${'E-mail is not valid'}
+    ${'email'}    | ${'user.mail.com'}  | ${'E-mail is not valid'}
+    ${'email'}    | ${'user@mail'}      | ${'E-mail is not valid'}
+    ${'password'} | ${null}             | ${'Password cannot be null'}
+    ${'password'} | ${'P4ssw'}          | ${'Password must be at least 6 characters'}
+    ${'password'} | ${'alllowercase'}   | ${'Password must have at least 1 uppercase, 1 lowercase letter and 1 number'}
+    ${'password'} | ${'ALLUPPERCASE'}   | ${'Password must have at least 1 uppercase, 1 lowercase letter and 1 number'}
+    ${'password'} | ${'012345678921'}   | ${'Password must have at least 1 uppercase, 1 lowercase letter and 1 number'}
+    ${'password'} | ${'lowerand133a'}   | ${'Password must have at least 1 uppercase, 1 lowercase letter and 1 number'}
+    ${'password'} | ${'UPPERAND133A'}   | ${'Password must have at least 1 uppercase, 1 lowercase letter and 1 number'}
+  `('returns $expectedMsg when $field is null', async ({ field, expectedMsg, value }) => {
+    const user = {
+      username: 'user1',
+      email: 'user@mail.com',
+      password: 'P4ssword',
+    };
+    user[field] = value;
+    const response = await postUser(user);
+    const body = response.body;
+    expect(body.validationErrors[field]).toBe(expectedMsg);
+  });
+
+  test('returns errors when username and email are null', async () => {
     const response = await postUser({
-      username: null,
-      email: 'user1@mail.com',
+      username: '',
+      email: '',
       password: 'P4ssword',
     });
     const body = response.body;
-    expect(body.validationErrors).not.toBeNull();
+    expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
   });
 });
