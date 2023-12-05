@@ -62,6 +62,14 @@ describe('User registration', () => {
 });
 
 describe.only('Invalid user registration', () => {
+  beforeAll(() => {
+    return sequelize.sync();
+  });
+
+  beforeEach(() => {
+    return User.destroy({ truncate: true });
+  });
+
   test('return 400 when user is null', async () => {
     const response = await postUser({
       username: null,
@@ -117,6 +125,25 @@ describe.only('Invalid user registration', () => {
       password: 'P4ssword',
     });
     const body = response.body;
+    expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
+  });
+
+  test('returns E-mail in use when same email is already in use', async () => {
+    await User.create({...validUser});
+    const response = await postUser();
+    console.log(response.body.validationErrors);
+    expect(response.body.validationErrors.email).toBe('E-mail in use');
+  });
+
+  test('returns errors for both username is null and email is in use', async () => {
+    await User.create(validUser);
+    const response = await postUser({
+      username: null,
+      email: validUser.email,
+      password: 'P4ssword'
+    });
+    const body = response.body;
+    console.log(body.validationErrors);
     expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
   });
 });

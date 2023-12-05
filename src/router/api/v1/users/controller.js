@@ -12,8 +12,12 @@ const createUsers = async (req, res) => {
     errorResults.array().forEach((error) => (validationErrors[error.path] = error.msg));
     return res.status(400).send({ validationErrors: validationErrors });
   }
-  await userService.saveUser(req.body);
-  return res.status(200).send({ message: 'User created' });
+  try {
+    await userService.saveUser(req.body);
+    return res.status(200).send({ message: 'User created' });
+  } catch(err) {
+    return res.status(400).send({ validationErrors: { email: 'E-mail in use' } });
+  }
 };
 
 module.exports = {

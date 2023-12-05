@@ -10,6 +10,11 @@ const saveUser = async (reqBody) => {
   await User.create(user);
 };
 
+const findUserByEmail = async (email) => {
+  return await User.findOne({ where: { email } });
+}
+
 module.exports = {
-  saveUser
+  saveUser,
+  findUserByEmail,
 }
