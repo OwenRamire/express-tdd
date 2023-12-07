@@ -9,15 +9,11 @@ const createUsers = async (req, res) => {
   const errorResults = validationResult(req);
   if(!errorResults.isEmpty()) {
     const validationErrors = {};
-    errorResults.array().forEach((error) => (validationErrors[error.path] = error.msg));
+    errorResults.array().forEach((error) => (validationErrors[error.path] = req.t(error.msg)));
     return res.status(400).send({ validationErrors: validationErrors });
   }
-  try {
-    await userService.saveUser(req.body);
-    return res.status(200).send({ message: 'User created' });
-  } catch(err) {
-    return res.status(400).send({ validationErrors: { email: 'E-mail in use' } });
-  }
+  await userService.saveUser(req.body);
+  return res.status(200).send({ message: req.t('user_create_success') });
 };
 
 module.exports = {
